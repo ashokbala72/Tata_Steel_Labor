@@ -259,7 +259,7 @@ with right:
     st.markdown(
     f"""
     <div style="
-        font-size: 10px;
+        font-size: 8px;
         line-height: 1.5;
         background-color: #eaf4ff;
         padding: 12px;
