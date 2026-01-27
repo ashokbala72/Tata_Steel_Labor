@@ -37,7 +37,7 @@ def call_genai(prompt: str) -> str:
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
-        "max_tokens": 700
+        "max_tokens": 1500
     }
 
     r = requests.post(
@@ -256,7 +256,20 @@ with right:
     with st.spinner("Generating AI-powered insights..."):
         insights = call_genai(prompt)
 
-    st.success(insights)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(
+    f"""
+    <div style="
+        font-size: 10px;
+        line-height: 1.5;
+        background-color: #eaf4ff;
+        padding: 12px;
+        border-radius: 10px;
+    ">
+        {insights}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 
 
