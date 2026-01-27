@@ -1,0 +1,6 @@
+vendor_id,vendor_name,vendor_type,vendor_category,base_location,rating,preferred_vendor
+V001,ABC Infra Services,Non-IT,Maintenance,Jamshedpur,4.2,Yes
+V002,SteelWorks Solutions,Non-IT,Manpower,Meramandali,3.8,No
+V003,Tata Technologies,IT,Software,Pune,4.6,Yes
+V004,Prime Industrial Services,Non-IT,Maintenance,Kalinganagar,4.0,Yes
+V005,NextGen Automation,IT,Automation,Bangalore,3.9,No

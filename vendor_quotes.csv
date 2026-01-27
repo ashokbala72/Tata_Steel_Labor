@@ -1,0 +1,8 @@
+quote_id,vendor_id,work_description_raw,quoted_rate,rate_unit,location,quote_date,estimated_quantity,total_quote_value
+Q1001,V001,Structural arc welding with certified welders,920,INR/hour,Jamshedpur,2025-01-05,120,110400
+Q1002,V002,Heavy fabrication welding manpower supply,850,INR/hour,Meramandali,2025-01-07,140,119000
+Q1003,V004,Advanced structural welding job incl safety gear,1100,INR/hour,Kalinganagar,2025-01-10,100,110000
+Q1004,V003,Enterprise application support for plant systems,750000,INR/month,Jamshedpur,2025-01-03,1,750000
+Q1005,V005,PLC automation troubleshooting and onsite support,48000,INR/day,Meramandali,2025-01-08,10,480000
+Q1006,V001,Electrical maintenance with skilled technicians,980,INR/hour,Jamshedpur,2025-01-12,90,88200
+Q1007,V002,Routine electrical breakdown support,820,INR/hour,Meramandali,2025-01-14,100,82000

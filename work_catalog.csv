@@ -1,0 +1,6 @@
+work_code,standardized_work_name,work_category,skill_required,unit_of_measure,complexity_level
+WELD_001,Welding - Structural,Fabrication,Welding,Per hour,Medium
+ELEC_002,Electrical Maintenance,Maintenance,Electrical,Per hour,High
+MECH_003,Mechanical Repair,Maintenance,Mechanical,Per job,Medium
+IT_004,Application Support,IT Services,Software,Per month,High
+AUTO_005,PLC Automation Support,Automation,Electrical,Per day,High

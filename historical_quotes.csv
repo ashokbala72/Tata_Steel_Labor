@@ -1,0 +1,7 @@
+vendor_id,work_code,location,historical_rate,rate_unit,quote_date
+V001,WELD_001,Jamshedpur,780,INR/hour,2024-09-15
+V002,WELD_001,Meramandali,800,INR/hour,2024-08-20
+V004,WELD_001,Kalinganagar,870,INR/hour,2024-10-01
+V001,ELEC_002,Jamshedpur,900,INR/hour,2024-09-10
+V002,ELEC_002,Meramandali,790,INR/hour,2024-08-28
+V003,IT_004,Jamshedpur,700000,INR/month,2024-07-01

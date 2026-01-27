@@ -1,0 +1,9 @@
+approval_id,vendor_id,work_id,quoted_rate,approval_status,approval_date,approver_role
+A001,V1,W101,42000,Approved,2024-01-12,Plant Head
+A002,V2,W101,39000,Approved,2024-01-13,Plant Head
+A003,V3,W101,47000,Rejected,2024-01-13,Plant Head
+A004,V1,W102,52000,Approved,2024-02-05,Procurement
+A005,V2,W102,61000,Rejected,2024-02-06,Procurement
+A006,V3,W102,58000,Approved,2024-02-07,Procurement
+A007,V1,W103,72000,Rejected,2024-03-10,Finance
+A008,V2,W103,68000,Approved,2024-03-11
