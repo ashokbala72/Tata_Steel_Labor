@@ -32,14 +32,18 @@ def call_genai(prompt: str) -> str:
                 "content": (
                     "You are an enterprise operations AI copilot for Tata Steel. "
                     "Analyze labor utilization, idle time, and cost leakage. "
-                    "Provide executive-ready insights with quantified INR impact "
-                    "and operational recommendations."
+                    "Identify linkages between operational conditions (such as rainfall, "
+                    "planned maintenance, or disruptions) and workforce deployment. "
+                    "Proactively recommend when business owners should inform vendors "
+                    "not to send associates to avoid unnecessary cost and idle time. "
+                    "Provide executive-ready insights with quantified GBP (£) cost impact "
+                    "and clear operational recommendations."
                 )
             },
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
-        "max_tokens": 700
+        "max_tokens": 800
     }
 
     r = requests.post(
@@ -63,33 +67,15 @@ st.set_page_config(
     page_title="Tata Steel Labor Utilization Optimization Dashboard",
     layout="wide"
 )
-st.markdown("""
-<style>
-/* Match Tata Steel dashboard background */
-.stApp {
-    background-color: #eef1f7;
-}
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown("""
-<style>
-/* Full page background */
-.stApp {
-    background: linear-gradient(
-        180deg,
-        #f7f9fc 0%,
-        #eef2f7 100%
-    );
-}
-</style>
-""", unsafe_allow_html=True)
 
 # -------------------------------------------------
 # STYLES
 # -------------------------------------------------
 st.markdown("""
 <style>
+.stApp {
+    background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+}
 .center { text-align: center; }
 
 .metric-card {
@@ -116,24 +102,6 @@ st.markdown("""
     padding: 15px;
     border-radius: 16px;
 }
-.header-bar {
-    background: linear-gradient(90deg, #3b6db3, #4a7fc7);
-    padding: 16px 24px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-}
-
-.header-title {
-    color: white;
-    font-size: 26px;
-    font-weight: 600;
-}
-
-.header-sub {
-    color: #e6ecf5;
-    font-size: 14px;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
@@ -142,6 +110,7 @@ st.markdown("""
 # -------------------------------------------------
 st.markdown("<h1 class='center'>Tata Steel Labor Utilization Optimization Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<h4 class='center'>Powered by TCS Gen AI and Azure Open AI</h4>", unsafe_allow_html=True)
+st.caption("All monetary values are shown in GBP (£) and are based on synthetic data for demonstration purposes only.")
 st.markdown("---")
 
 # -------------------------------------------------
@@ -182,7 +151,7 @@ attendance["idle_cost"] = attendance["idle_hours"] * attendance["hourly_cost_inr
 # -------------------------------------------------
 utilization_pct = (attendance["actual_hours_worked"].sum() / attendance["scheduled_hours"].sum()) * 100
 avg_idle_hours = attendance["idle_hours"].mean()
-total_idle_cost_lakhs = attendance["idle_cost"].sum() / 100000
+total_idle_cost_k = attendance["idle_cost"].sum() / 1000
 
 rainy = attendance.merge(external, on="date")
 rainy_idle_pct = (len(rainy[rainy["rainfall_mm"] > 20]) / len(attendance)) * 100
@@ -194,13 +163,32 @@ st.subheader("Key Metrics")
 
 m1, m2, m3, m4 = st.columns(4)
 
-m1.markdown(f"<div class='metric-card blue'><div class='metric-value'>{utilization_pct:.1f}%</div><div class='metric-label'>Utilization</div></div>", unsafe_allow_html=True)
-m2.markdown(f"<div class='metric-card red'><div class='metric-value'>₹ {total_idle_cost_lakhs:.1f} L</div><div class='metric-label'>Idle Cost</div></div>", unsafe_allow_html=True)
-m3.markdown(f"<div class='metric-card orange'><div class='metric-value'>{avg_idle_hours:.1f} hrs</div><div class='metric-label'>Idle Time / Employee</div></div>", unsafe_allow_html=True)
-m4.markdown(f"<div class='metric-card green'><div class='metric-value'>+{rainy_idle_pct:.1f}%</div><div class='metric-label'>Idle on Rainy Days</div></div>", unsafe_allow_html=True)
+m1.markdown(
+    f"<div class='metric-card blue'><div class='metric-value'>{utilization_pct:.1f}%</div>"
+    "<div class='metric-label'>Utilization</div></div>",
+    unsafe_allow_html=True
+)
+
+m2.markdown(
+    f"<div class='metric-card red'><div class='metric-value'>£ {total_idle_cost_k:.1f}k</div>"
+    "<div class='metric-label'>Idle Cost</div></div>",
+    unsafe_allow_html=True
+)
+
+m3.markdown(
+    f"<div class='metric-card orange'><div class='metric-value'>{avg_idle_hours:.1f} hrs</div>"
+    "<div class='metric-label'>Idle Time / Employee</div></div>",
+    unsafe_allow_html=True
+)
+
+m4.markdown(
+    f"<div class='metric-card green'><div class='metric-value'>+{rainy_idle_pct:.1f}%</div>"
+    "<div class='metric-label'>Idle on Rainy Days</div></div>",
+    unsafe_allow_html=True
+)
 
 # -------------------------------------------------
-# CHARTS SIDE BY SIDE
+# CHARTS
 # -------------------------------------------------
 st.subheader("Operational Insights")
 
@@ -217,28 +205,18 @@ with left:
     ).reset_index()
 
     fig, ax1 = plt.subplots(figsize=(6, 4))
-
-    ax1.bar(
-        plant_summary["plant"],
-        plant_summary["utilization"] * 100,
-        color="#4fa3e3",
-        alpha=0.85,
-        zorder=2
-    )
+    ax1.bar(plant_summary["plant"], plant_summary["utilization"] * 100, color="#4fa3e3")
     ax1.set_ylabel("Utilization (%)", fontsize=9)
-    ax1.tick_params(axis="both", labelsize=8)
 
     ax2 = ax1.twinx()
     ax2.plot(
         plant_summary["plant"],
-        plant_summary["idle_cost"] / 100000,
+        plant_summary["idle_cost"] / 1000,
         color="#d62728",
         linewidth=3,
-        marker="o",
-        zorder=3
+        marker="o"
     )
-    ax2.set_ylabel("Idle Cost (₹ Lakhs)", fontsize=9)
-    ax2.tick_params(axis="y", labelsize=8)
+    ax2.set_ylabel("Idle Cost (£k)", fontsize=9)
 
     plt.tight_layout()
     st.pyplot(fig)
@@ -253,31 +231,15 @@ with right:
     daily = daily.merge(external, on="date")
 
     fig2, ax1 = plt.subplots(figsize=(6, 4))
-
-    ax1.bar(
-        daily["date"],
-        daily["idle_cost"] / 100000,
-        color="#8b8bd6",
-        alpha=0.8,
-        zorder=2
-    )
-    ax1.set_ylabel("Idle Cost (₹ Lakhs)", fontsize=9)
+    ax1.bar(daily["date"], daily["idle_cost"] / 1000, color="#8b8bd6")
+    ax1.set_ylabel("Idle Cost (£k)", fontsize=9)
     ax1.tick_params(axis="x", rotation=45, labelsize=7)
-    ax1.tick_params(axis="y", labelsize=8)
 
     ax2 = ax1.twinx()
-    ax2.plot(
-        daily["date"],
-        daily["rainfall_mm"],
-        color="#2ca02c",
-        linewidth=3,
-        zorder=3
-    )
+    ax2.plot(daily["date"], daily["rainfall_mm"], color="#2ca02c", linewidth=3)
     ax2.set_ylabel("Rainfall (mm)", fontsize=9)
-    ax2.tick_params(axis="y", labelsize=8)
 
     ax1.xaxis.set_major_locator(mdates.DayLocator(interval=4))
-
     plt.tight_layout()
     st.pyplot(fig2)
     st.markdown("</div>", unsafe_allow_html=True)
@@ -285,18 +247,25 @@ with right:
 # -------------------------------------------------
 # GPT INSIGHTS
 # -------------------------------------------------
-st.subheader("GPT Insights")
+st.subheader("AI-Generated Operational Recommendations")
 
 prompt = f"""
 Overall utilization is {utilization_pct:.1f}%.
-Total idle cost is ₹{total_idle_cost_lakhs:.1f} lakhs.
+Total idle cost is £{total_idle_cost_k:.1f}k.
 Rainfall-driven idle impact is {rainy_idle_pct:.1f}%.
+
 Plant-level summary:
 {plant_summary.to_string(index=False)}
 
-Generate 4 executive insights with quantified impact and recommendations.
+Analyze linkages between operational conditions (such as rainfall patterns or disruptions)
+and workforce deployment. Recommend when business owners should proactively inform
+vendors not to send associates in order to avoid unnecessary idle cost and inefficiency.
+
+Generate 4 executive-ready insights with quantified impact and clear recommendations.
 """
 
-if st.button("Refresh Insights"):
-    with st.spinner("Generating AI insights..."):
-        st.success(call_genai(prompt))
+with st.spinner("Generating AI-powered operational recommendations..."):
+    ai_insights = call_genai(prompt)
+
+st.markdown(ai_insights)
+

@@ -193,6 +193,7 @@ quotes = pd.read_csv(quotes_file)
 approval_history = pd.read_csv(approval_history_file)
 benchmarks = pd.read_csv(historical_benchmarks_file)
 approval_rules = pd.read_csv(approval_rules_file)
+approval_rules.columns = approval_rules.columns.str.strip()
 
 # =================================================
 # KEY METRICS

@@ -29,9 +29,9 @@ def call_genai(prompt: str) -> str:
             {
                 "role": "system",
                 "content": (
-                    "You are a procurement and vendor pricing AI copilot for Tata Steel. "
+                    "You are a procurement and vendor pricing AI copilot for Tata Steel UK. "
                     "Analyze vendor pricing, benchmark rates, detect anomalies, "
-                    "and provide executive-ready recommendations."
+                    "and provide executive-ready recommendations in GBP (£)."
                 )
             },
             {"role": "user", "content": prompt}
@@ -58,7 +58,7 @@ def call_genai(prompt: str) -> str:
 # PAGE CONFIG
 # -------------------------------------------------
 st.set_page_config(
-    page_title="Tata Steel Vendor Pricing Dashboard",
+    page_title="Tata Steel UK Vendor Pricing Dashboard",
     layout="wide"
 )
 
@@ -96,8 +96,9 @@ st.markdown("""
 # -------------------------------------------------
 # TITLE
 # -------------------------------------------------
-st.markdown("<h1 class='center'>Tata Steel Vendor Pricing Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<h1 class='center'>Tata Steel UK Vendor Pricing Dashboard</h1>", unsafe_allow_html=True)
 st.markdown("<h4 class='center'>Powered by TCS Gen AI and Azure Open AI</h4>", unsafe_allow_html=True)
+st.caption("All monetary values are shown in GBP (£). Synthetic data for demo purposes.")
 st.markdown("---")
 
 # -------------------------------------------------
@@ -128,13 +129,44 @@ works = pd.read_csv(work_catalog)
 quotes = pd.read_csv(vendor_quotes)
 
 # -------------------------------------------------
+# FILTERS (MINIMAL & SAFE)
+# -------------------------------------------------
+st.markdown("### Filters")
+
+f1, f2 = st.columns(2)
+
+vendor_options = ["All Vendors"] + sorted(quotes["vendor_id"].astype(str).unique())
+work_options = ["All Products"] + sorted(quotes["work_description_raw"].astype(str).unique())
+
+with f1:
+    selected_vendor = st.selectbox("Filter by Vendor", vendor_options)
+
+with f2:
+    selected_work = st.selectbox("Filter by Product", work_options)
+
+filtered_quotes = quotes.copy()
+
+if selected_vendor != "All Vendors":
+    filtered_quotes = filtered_quotes[
+        filtered_quotes["vendor_id"].astype(str) == selected_vendor
+    ]
+
+if selected_work != "All Products":
+    filtered_quotes = filtered_quotes[
+        filtered_quotes["work_description_raw"].astype(str) == selected_work
+    ]
+
+# -------------------------------------------------
 # BASIC METRICS
 # -------------------------------------------------
-avg_rate = quotes["quoted_rate"].mean()
-median_rate = quotes["quoted_rate"].median()
+avg_rate = filtered_quotes["quoted_rate"].mean()
+median_rate = filtered_quotes["quoted_rate"].median()
 
-quotes["deviation_pct"] = (quotes["quoted_rate"] - median_rate) / median_rate * 100
-avg_deviation = quotes["deviation_pct"].mean()
+filtered_quotes["deviation_pct"] = (
+    (filtered_quotes["quoted_rate"] - median_rate) / median_rate * 100
+)
+
+avg_deviation = filtered_quotes["deviation_pct"].mean()
 
 approval_rate = 0
 if approval_outcomes is not None:
@@ -142,8 +174,10 @@ if approval_outcomes is not None:
         approvals = pd.read_csv(approval_outcomes)
         if not approvals.empty and "approval_status" in approvals.columns:
             approval_rate = (
-                approvals[approvals["approval_status"].astype(str).str.strip().str.upper() == "APPROVED"]
-                .shape[0] / approvals.shape[0]
+                approvals[
+                    approvals["approval_status"]
+                    .astype(str).str.strip().str.upper() == "APPROVED"
+                ].shape[0] / approvals.shape[0]
             ) * 100
     except pd.errors.EmptyDataError:
         approval_rate = 0
@@ -155,8 +189,8 @@ st.subheader("Key Metrics")
 
 m1, m2, m3, m4 = st.columns(4)
 
-m1.markdown(f"<div class='metric-card blue'><div class='metric-value'>₹ {avg_rate:.0f}/hr</div><div class='metric-label'>Avg Rate</div></div>", unsafe_allow_html=True)
-m2.markdown(f"<div class='metric-card purple'><div class='metric-value'>₹ {median_rate:.0f}/hr</div><div class='metric-label'>Market Median</div></div>", unsafe_allow_html=True)
+m1.markdown(f"<div class='metric-card blue'><div class='metric-value'>£ {avg_rate:,.0f}/hr</div><div class='metric-label'>Avg Rate</div></div>", unsafe_allow_html=True)
+m2.markdown(f"<div class='metric-card purple'><div class='metric-value'>£ {median_rate:,.0f}/hr</div><div class='metric-label'>Market Median</div></div>", unsafe_allow_html=True)
 m3.markdown(f"<div class='metric-card orange'><div class='metric-value'>{avg_deviation:.1f}%</div><div class='metric-label'>Avg Deviation</div></div>", unsafe_allow_html=True)
 m4.markdown(f"<div class='metric-card green'><div class='metric-value'>{approval_rate:.0f}%</div><div class='metric-label'>Approval Success</div></div>", unsafe_allow_html=True)
 
@@ -166,29 +200,21 @@ m4.markdown(f"<div class='metric-card green'><div class='metric-value'>{approval
 left, right = st.columns([2, 3])
 
 # ---------------- LEFT ----------------
-# ---------------- LEFT SIDE ----------------
 with left:
     st.markdown("<div class='section-box'>", unsafe_allow_html=True)
 
-    # -------- Benchmarking --------
     st.markdown("### Similar Work Benchmarking & Anomalies")
 
     fig, ax = plt.subplots(figsize=(6, 4))
     ax.bar(
-        quotes["vendor_id"],
-        quotes["quoted_rate"],
+        filtered_quotes["vendor_id"],
+        filtered_quotes["quoted_rate"],
         color="#4fa3e3",
         alpha=0.8
     )
 
-    ax.axhline(
-        median_rate,
-        color="red",
-        linestyle="--",
-        label="Market Median"
-    )
-
-    ax.set_ylabel("Rate (INR)")
+    ax.axhline(median_rate, color="red", linestyle="--", label="Market Median")
+    ax.set_ylabel("Rate (£/hr)")
     ax.tick_params(axis="x", rotation=30, labelsize=8)
     ax.legend()
 
@@ -196,24 +222,22 @@ with left:
     st.pyplot(fig)
 
     st.dataframe(
-        quotes[
+        filtered_quotes[
             ["vendor_id", "work_description_raw", "quoted_rate", "deviation_pct"]
-        ].assign(deviation_pct=lambda x: x["deviation_pct"].round(1)),
+        ].round(1),
         use_container_width=True,
         height=300
     )
 
-    # -------- Vendor Scoring (INSIDE LEFT) --------
     st.markdown("### Vendor Scoring Overview")
 
-    vendor_scores = quotes.groupby("vendor_id").agg(
+    vendor_scores = filtered_quotes.groupby("vendor_id").agg(
         avg_rate=("quoted_rate", "mean"),
         consistency=("quoted_rate", "std")
     ).reset_index()
 
     vendor_scores["consistency"] = vendor_scores["consistency"].fillna(0)
 
-    # Vendor scoring graph
     fig2, ax2 = plt.subplots(figsize=(6, 4))
     ax2.bar(
         vendor_scores["vendor_id"],
@@ -222,22 +246,15 @@ with left:
         alpha=0.85
     )
 
-    ax2.set_ylabel("Avg Rate (INR)")
+    ax2.set_ylabel("Avg Rate (£/hr)")
     ax2.tick_params(axis="x", rotation=30, labelsize=8)
-    ax2.tick_params(axis="y", labelsize=8)
 
     plt.tight_layout()
     st.pyplot(fig2)
 
-    # Vendor scoring table
-    st.dataframe(
-        vendor_scores.round(1),
-        use_container_width=True,
-        height=300
-    )
+    st.dataframe(vendor_scores.round(1), use_container_width=True, height=300)
 
     st.markdown("</div>", unsafe_allow_html=True)
-
 
 # ---------------- RIGHT ----------------
 with right:
@@ -245,31 +262,28 @@ with right:
     st.markdown("### AI-Powered Insights")
 
     prompt = f"""
-    Average quoted rate is ₹{avg_rate:.0f}.
-    Market median is ₹{median_rate:.0f}.
-    Pricing deviations observed:
-    {quotes[['vendor_id','quoted_rate','deviation_pct']].to_string(index=False)}
+Average quoted rate is £{avg_rate:,.0f}.
+Market median is £{median_rate:,.0f}.
+Pricing deviations observed:
+{filtered_quotes[['vendor_id','quoted_rate','deviation_pct']].to_string(index=False)}
 
-    Provide vendor pricing insights and recommendations.
-    """
+Provide vendor pricing insights and recommendations.
+"""
 
     with st.spinner("Generating AI-powered insights..."):
         insights = call_genai(prompt)
 
     st.markdown(
-    f"""
-    <div style="
-        font-size: 8px;
-        line-height: 1.5;
-        background-color: #eaf4ff;
-        padding: 12px;
-        border-radius: 10px;
-    ">
-        {insights}
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-
-
+        f"""
+        <div style="
+            font-size: 12px;
+            line-height: 1.5;
+            background-color: #eaf4ff;
+            padding: 12px;
+            border-radius: 10px;
+        ">
+            {insights}
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
