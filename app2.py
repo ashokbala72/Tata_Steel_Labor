@@ -22,24 +22,13 @@ def extract_pipe_table(ai_text: str) -> pd.DataFrame | None:
         engine="python"
     )
 
-    # Drop fully empty columns (like Unnamed: 0)
     df = df.dropna(axis=1, how="all")
-
-    # Clean column names
     df.columns = [c.strip() for c in df.columns]
-
-    # Remove accidental non-data rows
     df = df[~df.iloc[:, 0].astype(str).str.contains("SECTION", na=False)]
-
-    # Reset index for Streamlit
     df = df.reset_index(drop=True)
-
-    # Safe string cleanup
     df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
 
     return df
-
-
 
 
 # =================================================
@@ -115,20 +104,20 @@ st.markdown("""
     white-space: pre-wrap;
 }
 
-
-
 .textarea {
     font-size: 10px !important;
     font-weight: 500 !important;
-    color: #111827 !important;   /* dark slate */
+    color: #111827 !important;
     line-height: 1.6 !important;
 }
+
 .ai-summary {
     font-size: 8px;
     line-height: 1.3;
     color: #1f2937;
     white-space: pre-wrap;
 }
+
 .section-box {
     background: #f8f9fc;
     padding: 16px;
@@ -196,7 +185,7 @@ approval_rules = pd.read_csv(approval_rules_file)
 approval_rules.columns = approval_rules.columns.str.strip()
 
 # =================================================
-# KEY METRICS
+# KEY METRICS (GBP)
 # =================================================
 avg_initial = quotes["initial_quoted_rate"].mean()
 avg_change = quotes["change_percentage"].mean()
@@ -215,7 +204,7 @@ if approval_outcomes_file:
 
 m1, m2, m3, m4 = st.columns(4)
 
-m1.markdown(f"<div class='metric blue'>₹ {avg_initial:,.0f}<br/>Avg Initial Quote</div>", unsafe_allow_html=True)
+m1.markdown(f"<div class='metric blue'>£ {avg_initial:,.0f}<br/>Avg Initial Quote</div>", unsafe_allow_html=True)
 m2.markdown(f"<div class='metric orange'>{avg_change:.1f}%<br/>Avg Change</div>", unsafe_allow_html=True)
 m3.markdown(f"<div class='metric green'>{approval_success:.0f}%<br/>Approval Success</div>", unsafe_allow_html=True)
 m4.markdown(f"<div class='metric purple'>{len(quotes)}<br/>Quotes</div>", unsafe_allow_html=True)
@@ -233,15 +222,17 @@ with left:
     st.markdown("### Quote Overview")
 
     st.dataframe(
-        quotes[[
-            "quote_id",
-            "vendor_id",
-            "initial_quoted_rate",
-            "revised_quoted_rate",
-            "change_percentage",
-            "approval_status",
-            "approval_path"
-        ]],
+        quotes[
+            [
+                "quote_id",
+                "vendor_id",
+                "initial_quoted_rate",
+                "revised_quoted_rate",
+                "change_percentage",
+                "approval_status",
+                "approval_path"
+            ]
+        ],
         use_container_width=True,
         height=220
     )
@@ -251,13 +242,15 @@ with left:
     st.markdown("### Approval History")
 
     st.dataframe(
-        approval_history[[
-            "quote_id",
-            "decision_made",
-            "approver_role",
-            "approval_date",
-            "reason_for_decision"
-        ]],
+        approval_history[
+            [
+                "quote_id",
+                "decision_made",
+                "approver_role",
+                "approval_date",
+                "reason_for_decision"
+            ]
+        ],
         use_container_width=True,
         height=200
     )
@@ -282,7 +275,7 @@ with left:
         color="red",
         linewidth=2
     )
-    ax.set_ylabel("₹ / hr")
+    ax.set_ylabel("£ / hr")
     ax.legend()
     st.pyplot(fig)
     plt.close(fig)
@@ -353,27 +346,17 @@ Any violation of formatting rules is considered an error.
 
     ai_output = st.session_state.ai_output
 
-    # -----------------------------
-    # Render SUMMARY
-    # -----------------------------
     summary_part = ai_output.split("SECTION: Recommendation Table")[0]
     st.markdown(
         f"<div class='ai-output'>{summary_part}</div>",
         unsafe_allow_html=True
     )
 
-    # -----------------------------
-    # Render TABLE
-    # -----------------------------
     df = extract_pipe_table(ai_output)
     if df is not None:
         st.markdown("#### Recommendation Table")
         st.table(df)
 
-
-    # -----------------------------
-    # Render AUDIT JUSTIFICATION
-    # -----------------------------
     if "SECTION: Audit Justification" in ai_output:
         audit_part = ai_output.split("SECTION: Audit Justification")[1]
         st.markdown(
