@@ -249,6 +249,8 @@ with right:
 # -------------------------------------------------
 st.subheader("AI-Generated Operational Recommendations")
 
+# Assuming you have already defined utilization_pct, total_idle_cost_k, rainy_idle_pct, and plant_summary
+
 prompt = f"""
 Overall utilization is {utilization_pct:.1f}%.
 Total idle cost is £{total_idle_cost_k:.1f}k.
@@ -257,12 +259,15 @@ Rainfall-driven idle impact is {rainy_idle_pct:.1f}%.
 Plant-level summary:
 {plant_summary.to_string(index=False)}
 
-Analyze linkages between operational conditions (such as rainfall patterns or disruptions)
-and workforce deployment. Recommend when business owners should proactively inform
-vendors not to send associates in order to avoid unnecessary idle cost and inefficiency.
+Based on the operational data, including weather events (e.g., rainfall) and planned shutdowns, identify specific **days** where roster adjustments should be made. Provide recommendations for which days business owners should **notify vendors not to send associates**, in order to avoid unnecessary idle costs and inefficiencies. 
 
-Generate 4 executive-ready insights with quantified impact and clear recommendations.
+Include both:
+- **Rainfall above a certain threshold** (e.g., >20 mm) as a key trigger for adjustment.
+- **Planned shutdowns** that will impact workforce deployment.
+
+For each recommended day, provide a brief explanation and a quantified cost impact if applicable.
 """
+
 
 with st.spinner("Generating AI-powered operational recommendations..."):
     ai_insights = call_genai(prompt)
