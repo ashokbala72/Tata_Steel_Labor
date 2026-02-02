@@ -43,7 +43,7 @@ def call_genai(prompt: str) -> str:
             {"role": "user", "content": prompt}
         ],
         "temperature": 0.3,
-        "max_tokens": 800
+        "max_tokens": 1500
     }
 
     r = requests.post(
